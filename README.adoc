@@ -16,3 +16,11 @@ class TestEntity {
   <b>href: URI</b>
 }
 ----
+New Entity defined by API-0001
+[plantuml, api001-classes, png]
+----
+class API-001Entity {
+  <b>id: String</b>
+  <b>href: URI</b>
+}
+----
