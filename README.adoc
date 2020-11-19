@@ -19,7 +19,7 @@ class TestEntity {
 New Entity defined by API-0001
 [plantuml, api001-classes, png]
 ----
-class API-001Entity {
+class API-0001Entity {
   <b>id: String</b>
   <b>href: URI</b>
 }
