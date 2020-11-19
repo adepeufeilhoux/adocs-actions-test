@@ -1,0 +1,67 @@
+name: Publish ADOC
+env:
+  ARTIFACT_DESTINATION: 'output/'
+  ARCHIVE_NAME: 'documents.zip'
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  adocRender:
+    name: Render Documents
+    runs-on: Ubuntu-20.04
+    container:
+      image: asciidoctor/docker-asciidoctor
+    steps:
+      - uses: actions/checkout@v2
+      - name: Render Docs
+        run: asciidoctor-pdf -r asciidoctor-diagram -D ${{ env.ARTIFACT_DESTINATION }} *.adoc
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@master
+        with:
+          name: ${{ env.ARCHIVE_NAME }}
+          path: ${{ env.ARTIFACT_DESTINATION }}
+
+  publish:
+    name: Publish Draft Release
+    runs-on: Ubuntu-20.04
+    needs: adocRender
+    if: "'refs/heads/main' == github.ref || startsWith(github.ref, 'refs/tags/')"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@master
+        with:
+          name: ${{ env.ARCHIVE_NAME }}
+          path: ${{ env.ARTIFACT_DESTINATION }}
+
+      - name: Zip Artifacts
+        id: zip_artifacts
+        uses: montudor/action-zip@v0.1.0
+        with:
+          args: zip -qq -r ${{ env.ARCHIVE_NAME }} ${{ env.ARTIFACT_DESTINATION }}
+
+      - name: Publish / Update Release Draft
+        id: update_release_draft
+        uses: release-drafter/release-drafter@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Needed until https://github.com/svenstaro/upload-release-action/issues/19
+          publish: true
+          prerelease: true
+
+      - name: Upload binaries to Release
+        uses: svenstaro/upload-release-action@v2(
+        if: "'success' == steps.update_release_draft.conclusion"
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.update_release_draft.outputs.tag_name }}
+          file: ${{ env.ARCHIVE_NAME }}
+          file_glob: false
+          overwrite: true

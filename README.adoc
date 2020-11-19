@@ -1,0 +1,18 @@
+:toc:
+= Adoc Test Document
+
+== Revisions
+[source, markdown]
+----
+include::CHANGELOG.md[]
+----
+== Test Heading
+This is a test section.
+
+[plantuml, diagram-classes, png]
+----
+class TestEntity {
+  <b>id: String</b>
+  <b>href: URI</b>
+}
+----
